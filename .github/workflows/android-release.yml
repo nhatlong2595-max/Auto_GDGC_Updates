@@ -39,11 +39,22 @@ jobs:
           token: ${{ secrets.SOURCE_REPO_TOKEN }}
           path: app-source
 
-      - name: Verify Android source
+      - name: Locate or extract Android source
         shell: bash
         run: |
-          test -f app-source/settings.gradle.kts || { echo "::error::Source repository must contain settings.gradle.kts at its root."; exit 1; }
-          test -f app-source/app/build.gradle.kts || { echo "::error::Source repository must contain app/build.gradle.kts."; exit 1; }
+          if [ -f app-source/settings.gradle.kts ] && [ -f app-source/app/build.gradle.kts ]; then
+            SOURCE_DIR="app-source"
+          else
+            SOURCE_ZIP="$(find app-source -maxdepth 1 -type f -name '*.zip' | head -n 1)"
+            test -n "$SOURCE_ZIP" || { echo "::error::Private source repo must contain the project files or one source ZIP."; exit 1; }
+            mkdir -p extracted-source
+            unzip -q "$SOURCE_ZIP" -d extracted-source
+            SETTINGS_FILE="$(find extracted-source -mindepth 2 -maxdepth 5 -name settings.gradle.kts -type f | head -n 1)"
+            test -n "$SETTINGS_FILE" || { echo "::error::Could not find settings.gradle.kts in source ZIP."; exit 1; }
+            SOURCE_DIR="$(dirname "$SETTINGS_FILE")"
+          fi
+          test -f "$SOURCE_DIR/app/build.gradle.kts" || { echo "::error::Could not find app/build.gradle.kts in source project."; exit 1; }
+          echo "SOURCE_DIR=$SOURCE_DIR" >> "$GITHUB_ENV"
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -78,7 +89,7 @@ jobs:
           python3 - <<'PY'
           import os, re
           from pathlib import Path
-          p = Path("app-source/app/build.gradle.kts")
+          p = Path(os.environ["SOURCE_DIR"]) / "app/build.gradle.kts"
           s = p.read_text()
           s, n1 = re.subn(r'versionCode\s*=\s*\d+', 'versionCode = ' + os.environ["APP_VERSION_CODE"], s, count=1)
           s, n2 = re.subn(r'versionName\s*=\s*"[^"]+"', 'versionName = "' + os.environ["APP_VERSION"] + '"', s, count=1)
@@ -86,8 +97,8 @@ jobs:
               raise SystemExit("Could not safely update versionCode/versionName in app/build.gradle.kts")
           p.write_text(s)
           PY
-          gradle --no-daemon -p app-source :app:assembleDebug
-          APK="$(find app-source/app/build/outputs/apk/debug -maxdepth 1 -name '*.apk' -type f | head -n 1)"
+          gradle --no-daemon -p "$SOURCE_DIR" :app:assembleDebug
+          APK="$(find "$SOURCE_DIR/app/build/outputs/apk/debug" -maxdepth 1 -name '*.apk' -type f | head -n 1)"
           test -n "$APK"
           cp "$APK" Auto_GDGC.apk
           sha256sum Auto_GDGC.apk > Auto_GDGC.apk.sha256
