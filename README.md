@@ -1,23 +1,48 @@
 # Auto_GDGC_Updates
 
-Public update channel for the Auto_GDGC Android app.
+Public update channel for Auto_GDGC. This repository is intended to contain only update metadata and published APK release assets.
 
-## Important setup
+## Recommended repository layout
 
-1. Do not upload `debug.keystore`, passwords, tokens, or private signing material to this public repository.
-2. The currently installed debug APK can only be updated by an APK signed with the **same debug certificate**. Back up the exact keystore and obtain its passwords before moving to CI signing.
-3. The included workflow expects a Gradle release signing configuration to read:
-   - `SIGNING_STORE_FILE`
-   - `SIGNING_STORE_PASSWORD`
-   - `SIGNING_KEY_ALIAS`
-   - `SIGNING_KEY_PASSWORD`
-4. Add those values as repository Actions secrets before running the workflow.
-5. The workflow assumes the Android app source is in this repository. It does not currently contain that source.
+- Keep Android source code in a **separate private repository**.
+- Keep this repository **public** so the installed app can download the manifest and APK release without a GitHub login.
+- Never upload keystores, passwords, access tokens, or other secrets to this repository.
 
-## Update manifest
+## Required configuration
 
-`update.json` is a metadata example only. The app must implement a compatible checker, hash verification, APK download, and Android package installer flow before this manifest can update devices.
+In this public repository, configure:
 
-## Delta updates
+### Actions variable
 
-A delta cannot be blindly applied to an APK by concatenating files. It requires a defined binary-diff format, exact base APK/version matching, reconstruction, SHA-256 verification, and signature verification. Keep `forceFullApk: true` until that pipeline is implemented and tested.
+- `SOURCE_REPO`: full name of the private Android source repository, e.g. `owner/Auto_GDGC_Source`.
+
+### Actions secrets
+
+- `SOURCE_REPO_TOKEN`: fine-grained token with read-only Contents access to the private source repository.
+- `DEBUG_KEYSTORE_BASE64`: Base64 encoding of the exact `~/.android/debug.keystore` used to sign the APK already installed on the phone.
+
+Do not paste these values into issues, commits, chat, or source files.
+
+## Debug signing compatibility
+
+Android permits an app update only when the new APK is signed with the same signing certificate as the installed APK. If you currently install debug builds, preserve the original debug keystore. Android Studio normally keeps it at `~/.android/debug.keystore`.
+
+The workflow restores that file to the standard location on the build runner and uses Gradle's debug signing configuration. This is suitable for a personal/testing app, not recommended for public distribution. Consider switching to a dedicated release keystore only when you can also migrate/reinstall the app or otherwise preserve signing continuity.
+
+## Release workflow
+
+After the source repo and secrets are configured:
+
+1. Open **Actions**.
+2. Select **Build and publish Auto_GDGC**.
+3. Choose **Run workflow**.
+4. Increase `version_code` for every release; it must be greater than the version installed on the device.
+5. Enter a new `version` and release notes.
+
+The workflow builds a complete signed APK, publishes it as a GitHub Release asset named `Auto_GDGC.apk`, computes its SHA-256, and updates `update.json`.
+
+## Current limitation: full APK only
+
+The current release workflow publishes a full APK. The `update.json` manifest is a server-side metadata file; the Android app must also implement the update checker, SHA-256 verification, download, and Android package-installer flow.
+
+Delta/patch delivery is not enabled yet. It requires a defined patch format, an exact base-APK/version match, patch reconstruction, verification of the resulting APK hash and signing certificate, and a fallback to the full APK. Do not set a patch URL until that client-side implementation has been added and tested.
