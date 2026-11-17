@@ -38,7 +38,7 @@ jobs:
           test -n "$DEBUG_KEYSTORE" || { echo "::error::Set repository secret DEBUG_KEYSTORE_BASE64."; exit 1; }
 
       - name: Checkout private Android source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ vars.SOURCE_REPO }}
           token: ${{ secrets.SOURCE_REPO_TOKEN }}
@@ -66,10 +66,6 @@ jobs:
             platform-tools
             platforms;android-34
             build-tools;34.0.0
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
 
       - name: Restore the exact existing debug signing key
         shell: bash
