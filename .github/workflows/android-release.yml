@@ -7,6 +7,10 @@ on:
         description: "Release version, for example 4.2.0"
         required: true
         default: "4.2.0"
+      version_code:
+        description: "Android versionCode; must be greater than the installed app"
+        required: true
+        default: "6"
       release_notes:
         description: "Short release notes"
         required: true
@@ -19,43 +23,99 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout app source
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          repository: nhatlong2595-max/Auto_GDGC_Updates
+
+      - name: Verify Android source is present
+        shell: bash
+        run: |
+          test -f settings.gradle.kts || { echo "::error::Android source missing: settings.gradle.kts is not in repository root."; exit 1; }
+          test -f app/build.gradle.kts || { echo "::error::Android source missing: app/build.gradle.kts is not in repository root."; exit 1; }
+
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
+
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
-      - name: Stop if signing secrets are missing
-        shell: bash
-        run: |
-          test -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" || (echo "Missing ANDROID_KEYSTORE_BASE64" && exit 1)
-          test -n "${{ secrets.ANDROID_KEY_ALIAS }}" || (echo "Missing ANDROID_KEY_ALIAS" && exit 1)
-          test -n "${{ secrets.ANDROID_KEY_PASSWORD }}" || (echo "Missing ANDROID_KEY_PASSWORD" && exit 1)
-          test -n "${{ secrets.ANDROID_STORE_PASSWORD }}" || (echo "Missing ANDROID_STORE_PASSWORD" && exit 1)
-      - name: Decode signing key
-        shell: bash
-        run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > "$RUNNER_TEMP/release.jks"
-      - name: Build signed APK
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      - name: Restore the existing debug signing key
         env:
-          SIGNING_STORE_FILE: ${{ runner.temp }}/release.jks
-          SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
-          SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
+        shell: bash
         run: |
-          chmod +x ./gradlew
-          ./gradlew assembleRelease
-      - name: Publish GitHub Release
+          test -n "$DEBUG_KEYSTORE_BASE64" || { echo "::error::Add the DEBUG_KEYSTORE_BASE64 repository secret first."; exit 1; }
+          mkdir -p "$HOME/.android"
+          printf '%s' "$DEBUG_KEYSTORE_BASE64" | base64 --decode > "$HOME/.android/debug.keystore"
+          chmod 600 "$HOME/.android/debug.keystore"
+
+      - name: Set version and build debug APK
+        env:
+          APP_VERSION: ${{ inputs.version }}
+          APP_VERSION_CODE: ${{ inputs.version_code }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import os, re
+          from pathlib import Path
+          p = Path("app/build.gradle.kts")
+          s = p.read_text()
+          s, n1 = re.subn(r'versionCode\\s*=\\s*\\d+', 'versionCode = ' + os.environ["APP_VERSION_CODE"], s, count=1)
+          s, n2 = re.subn(r'versionName\\s*=\\s*"[^"]+"', 'versionName = "' + os.environ["APP_VERSION"] + '"', s, count=1)
+          if n1 != 1 or n2 != 1:
+              raise SystemExit("Could not safely update versionCode/versionName in app/build.gradle.kts")
+          p.write_text(s)
+          PY
+          gradle --no-daemon :app:assembleDebug
+          APK="$(find app/build/outputs/apk/debug -maxdepth 1 -name '*.apk' -type f | head -n 1)"
+          test -n "$APK"
+          cp "$APK" Auto_GDGC.apk
+          sha256sum Auto_GDGC.apk > Auto_GDGC.apk.sha256
+
+      - name: Publish APK release
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.version }}
           NOTES: ${{ inputs.release_notes }}
+        shell: bash
         run: |
-          APK=$(find app/build/outputs/apk/release -name '*.apk' -type f | head -n 1)
-          test -n "$APK"
-          gh release create "v$VERSION" "$APK" --title "Auto_GDGC v$VERSION" --notes "$NOTES" --latest
+          gh release create "v$VERSION" Auto_GDGC.apk Auto_GDGC.apk.sha256 --title "Auto_GDGC v$VERSION" --notes "$NOTES" --latest
+
+      - name: Update public update manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+          VERSION_CODE: ${{ inputs.version_code }}
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          APK_URL="https://github.com/$REPOSITORY/releases/latest/download/Auto_GDGC.apk"
+          SHA="$(cut -d ' ' -f 1 Auto_GDGC.apk.sha256)"
+          python3 - <<'PY'
+          import json, os
+          data = {
+              "app": "Auto_GDGC",
+              "latestVersion": os.environ["VERSION"],
+              "versionCode": int(os.environ["VERSION_CODE"]),
+              "releaseNotes": os.environ.get("NOTES", "Auto_GDGC update"),
+              "apkUrl": os.environ["APK_URL"],
+              "sha256": os.environ["SHA"],
+              "forceFullApk": True
+          }
+          with open("update.json", "w", encoding="utf-8") as f:
+              json.dump(data, f, ensure_ascii=False, indent=2)
+          PY
+          CONTENT="$(base64 -w 0 update.json)"
+          SHA_FILE="$(gh api "repos/$REPOSITORY/contents/update.json" --jq .sha)"
+          gh api --method PUT "repos/$REPOSITORY/contents/update.json" \
+            -f message="Update manifest for v$VERSION" \
+            -f content="$CONTENT" \
+            -f sha="$SHA_FILE" \
+            -f branch="main"
