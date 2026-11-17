@@ -1,0 +1,61 @@
+name: Build and publish Auto_GDGC
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version, for example 4.2.0"
+        required: true
+        default: "4.2.0"
+      release_notes:
+        description: "Short release notes"
+        required: true
+        default: "Auto_GDGC update"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout app source
+        uses: actions/checkout@v4
+        with:
+          repository: nhatlong2595-max/Auto_GDGC_Updates
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Stop if signing secrets are missing
+        shell: bash
+        run: |
+          test -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" || (echo "Missing ANDROID_KEYSTORE_BASE64" && exit 1)
+          test -n "${{ secrets.ANDROID_KEY_ALIAS }}" || (echo "Missing ANDROID_KEY_ALIAS" && exit 1)
+          test -n "${{ secrets.ANDROID_KEY_PASSWORD }}" || (echo "Missing ANDROID_KEY_PASSWORD" && exit 1)
+          test -n "${{ secrets.ANDROID_STORE_PASSWORD }}" || (echo "Missing ANDROID_STORE_PASSWORD" && exit 1)
+      - name: Decode signing key
+        shell: bash
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > "$RUNNER_TEMP/release.jks"
+      - name: Build signed APK
+        env:
+          SIGNING_STORE_FILE: ${{ runner.temp }}/release.jks
+          SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleRelease
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+          NOTES: ${{ inputs.release_notes }}
+        run: |
+          APK=$(find app/build/outputs/apk/release -name '*.apk' -type f | head -n 1)
+          test -n "$APK"
+          gh release create "v$VERSION" "$APK" --title "Auto_GDGC v$VERSION" --notes "$NOTES" --latest
