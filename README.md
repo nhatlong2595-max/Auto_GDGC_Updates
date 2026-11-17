@@ -46,3 +46,25 @@ The workflow builds a complete signed APK, publishes it as a GitHub Release asse
 The current release workflow publishes a full APK. The `update.json` manifest is a server-side metadata file; the Android app must also implement the update checker, SHA-256 verification, download, and Android package-installer flow.
 
 Delta/patch delivery is not enabled yet. It requires a defined patch format, an exact base-APK/version match, patch reconstruction, verification of the resulting APK hash and signing certificate, and a fallback to the full APK. Do not set a patch URL until that client-side implementation has been added and tested.
+
+
+## Cấu hình Actions (đã căn theo repo source của bạn)
+
+Trong repository **Auto_GDGC_Updates** (không phải Auto_GDGC_Source), vào Settings → Secrets and variables → Actions.
+
+Tạo 1 Repository variable:
+- SOURCE_REPO = nhatlong2595-max/Auto_GDGC_Source
+
+Tạo 2 Repository secrets:
+- SOURCE_REPO_TOKEN = Fine-grained PAT có quyền Contents: Read-only trên riêng Auto_GDGC_Source.
+- DEBUG_KEYSTORE_BASE64 = nội dung Base64 của file ~/.android/debug.keystore đang dùng để ký app đã cài.
+
+Workflow hiện tìm tự động settings.gradle.kts trong source repo, nên chấp nhận project nằm dưới thư mục AutoGiamDinh 6/.
+
+Sau khi nhập đủ 3 giá trị:
+1. Mở tab Actions trong Auto_GDGC_Updates.
+2. Chọn Build and publish Auto_GDGC.
+3. Run workflow với version 4.2.0, version_code lớn hơn 5 (ví dụ 6).
+4. Chỉ thử sau khi chắc chắn DEBUG_KEYSTORE_BASE64 là đúng khóa APK đang cài.
+
+LƯU Ý: hiện workflow phát hành APK đầy đủ, chưa có delta patch. Ứng dụng cũng chưa được xác nhận có nút Smart Update; manifest không tự làm app cập nhật nếu code client chưa được thêm.
