@@ -1,10 +1,9 @@
 {
   "app": "Auto_GDGC",
-  "latestVersion": "4.1.0",
-  "versionCode": 5,
-  "releaseNotes": "Initial Smart Update manifest. Publish a signed APK release before enabling in-app updates.",
+  "latestVersion": "4.2.0",
+  "versionCode": 6,
+  "releaseNotes": "Test Smart update",
   "apkUrl": "https://github.com/nhatlong2595-max/Auto_GDGC_Updates/releases/latest/download/Auto_GDGC.apk",
-  "sha256": "",
-  "minSupportedVersionCode": 5,
+  "sha256": "9255a8cdf1df0e3ce85844582a95df649e8dc33d0d6e554f78e64bed5fec7b0a",
   "forceFullApk": true
 }
