@@ -26,6 +26,12 @@ jobs:
       - name: Checkout public update repository
         uses: actions/checkout@v4
 
+      - name: Check private source configuration
+        shell: bash
+        run: |
+          test -n "${{ vars.SOURCE_REPO }}" || { echo "::error::Set the SOURCE_REPO repository variable first."; exit 1; }
+          test -n "${{ secrets.SOURCE_REPO_TOKEN }}" || { echo "::error::Add the SOURCE_REPO_TOKEN secret first."; exit 1; }
+
       - name: Checkout private Android source
         uses: actions/checkout@v4
         with:
@@ -36,7 +42,6 @@ jobs:
       - name: Verify Android source
         shell: bash
         run: |
-          test -n "${{ vars.SOURCE_REPO }}" || { echo "::error::Set the SOURCE_REPO repository variable first."; exit 1; }
           test -f app-source/settings.gradle.kts || { echo "::error::Source repository must contain settings.gradle.kts at its root."; exit 1; }
           test -f app-source/app/build.gradle.kts || { echo "::error::Source repository must contain app/build.gradle.kts."; exit 1; }
 
@@ -75,8 +80,8 @@ jobs:
           from pathlib import Path
           p = Path("app-source/app/build.gradle.kts")
           s = p.read_text()
-          s, n1 = re.subn(r'versionCode\\s*=\\s*\\d+', 'versionCode = ' + os.environ["APP_VERSION_CODE"], s, count=1)
-          s, n2 = re.subn(r'versionName\\s*=\\s*"[^"]+"', 'versionName = "' + os.environ["APP_VERSION"] + '"', s, count=1)
+          s, n1 = re.subn(r'versionCode\s*=\s*\d+', 'versionCode = ' + os.environ["APP_VERSION_CODE"], s, count=1)
+          s, n2 = re.subn(r'versionName\s*=\s*"[^"]+"', 'versionName = "' + os.environ["APP_VERSION"] + '"', s, count=1)
           if n1 != 1 or n2 != 1:
               raise SystemExit("Could not safely update versionCode/versionName in app/build.gradle.kts")
           p.write_text(s)
