@@ -23,14 +23,22 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout public update repository
         uses: actions/checkout@v4
 
-      - name: Verify Android source is present
+      - name: Checkout private Android source
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.SOURCE_REPO }}
+          token: ${{ secrets.SOURCE_REPO_TOKEN }}
+          path: app-source
+
+      - name: Verify Android source
         shell: bash
         run: |
-          test -f settings.gradle.kts || { echo "::error::Android source missing: settings.gradle.kts is not in repository root."; exit 1; }
-          test -f app/build.gradle.kts || { echo "::error::Android source missing: app/build.gradle.kts is not in repository root."; exit 1; }
+          test -n "${{ vars.SOURCE_REPO }}" || { echo "::error::Set the SOURCE_REPO repository variable first."; exit 1; }
+          test -f app-source/settings.gradle.kts || { echo "::error::Source repository must contain settings.gradle.kts at its root."; exit 1; }
+          test -f app-source/app/build.gradle.kts || { echo "::error::Source repository must contain app/build.gradle.kts."; exit 1; }
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -65,7 +73,7 @@ jobs:
           python3 - <<'PY'
           import os, re
           from pathlib import Path
-          p = Path("app/build.gradle.kts")
+          p = Path("app-source/app/build.gradle.kts")
           s = p.read_text()
           s, n1 = re.subn(r'versionCode\\s*=\\s*\\d+', 'versionCode = ' + os.environ["APP_VERSION_CODE"], s, count=1)
           s, n2 = re.subn(r'versionName\\s*=\\s*"[^"]+"', 'versionName = "' + os.environ["APP_VERSION"] + '"', s, count=1)
@@ -73,8 +81,8 @@ jobs:
               raise SystemExit("Could not safely update versionCode/versionName in app/build.gradle.kts")
           p.write_text(s)
           PY
-          gradle --no-daemon :app:assembleDebug
-          APK="$(find app/build/outputs/apk/debug -maxdepth 1 -name '*.apk' -type f | head -n 1)"
+          gradle --no-daemon -p app-source :app:assembleDebug
+          APK="$(find app-source/app/build/outputs/apk/debug -maxdepth 1 -name '*.apk' -type f | head -n 1)"
           test -n "$APK"
           cp "$APK" Auto_GDGC.apk
           sha256sum Auto_GDGC.apk > Auto_GDGC.apk.sha256
@@ -93,18 +101,20 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.version }}
           VERSION_CODE: ${{ inputs.version_code }}
+          NOTES: ${{ inputs.release_notes }}
           REPOSITORY: ${{ github.repository }}
         shell: bash
         run: |
           APK_URL="https://github.com/$REPOSITORY/releases/latest/download/Auto_GDGC.apk"
           SHA="$(cut -d ' ' -f 1 Auto_GDGC.apk.sha256)"
+          export APK_URL SHA
           python3 - <<'PY'
           import json, os
           data = {
               "app": "Auto_GDGC",
               "latestVersion": os.environ["VERSION"],
               "versionCode": int(os.environ["VERSION_CODE"]),
-              "releaseNotes": os.environ.get("NOTES", "Auto_GDGC update"),
+              "releaseNotes": os.environ["NOTES"],
               "apkUrl": os.environ["APK_URL"],
               "sha256": os.environ["SHA"],
               "forceFullApk": True
