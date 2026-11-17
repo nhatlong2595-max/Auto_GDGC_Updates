@@ -6,15 +6,15 @@ on:
       version:
         description: "Release version, for example 4.2.0"
         required: true
-        default: "4.2.0"
+        default: "4.2.2"
       version_code:
         description: "Android versionCode; must be greater than the installed app"
         required: true
-        default: "6"
+        default: "8"
       release_notes:
         description: "Short release notes"
         required: true
-        default: "Auto_GDGC update"
+        default: "Smart Update and 2x faster roll timing"
 
 permissions:
   contents: write
