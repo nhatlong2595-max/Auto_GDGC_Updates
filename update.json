@@ -1,9 +1,9 @@
 {
   "app": "Auto_GDGC",
-  "latestVersion": "4.2.1",
-  "versionCode": 6,
-  "releaseNotes": "Add Smart Update",
+  "latestVersion": "4.2.3",
+  "versionCode": 8,
+  "releaseNotes": "Smart Update and 2x faster roll timing",
   "apkUrl": "https://github.com/nhatlong2595-max/Auto_GDGC_Updates/releases/latest/download/Auto_GDGC.apk",
-  "sha256": "d8c4cf068b9a2d90886ca94c2e8fb26387a2639307d836192cd72f8f482bf2ef",
+  "sha256": "0c4eb42a7849d44cbda809f6f3033f5945bafbdee5566ab33e93ec87f7a0c7e7",
   "forceFullApk": true
 }
