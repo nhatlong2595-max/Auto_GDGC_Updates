@@ -153,7 +153,7 @@ function runDemo(){
  };
  tick();
 }
-document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{if(running){running=false;$("start").classList.remove("running");}$("status").textContent="Sẵn sàng";mode=b.dataset.tab;render();}));
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{if(running){running=false;stopRunClock();$("start").classList.remove("running");}$("status").textContent="Sẵn sàng";mode=b.dataset.tab;render();}));
 $("start").addEventListener("click",runDemo);
 $("reset").addEventListener("click",()=>{if(running){running=false;stopRunClock();$("start").classList.remove("running");}stats=JSON.parse(JSON.stringify(defaults));rolls=0;$("rollMetric").textContent="0";$("matchMetric").textContent="0";$("resultCount").textContent="Chưa có kết quả";$("resultLines").innerHTML='<div class="result-line">— Chưa có dòng —</div>'.repeat(5);log("<p>Đã đặt lại thông số mô phỏng.</p>");$("status").textContent="Sẵn sàng";render();});
 $("minimize").addEventListener("click",()=>{const d=$(".device");const collapsed=d.dataset.collapsed==="1";d.dataset.collapsed=collapsed?"0":"1";$("controls").style.display=collapsed?"":"none";$("hint").style.display=collapsed?"":"none";$(".actions").style.display=collapsed?"":"none";$("minimize").textContent=collapsed?"−":"+";});
