@@ -90,7 +90,7 @@ function fakeLines(){
 function runDemo(){
  if(running){running=false;$("status").textContent="Đã dừng mô phỏng";$("start").classList.remove("running");render();return;}
  running=true;$("start").classList.add("running");$("status").textContent="Đang mô phỏng…";
- const max=mode==="click"?Number($("clickCount")?.value||0)||12:Number($("maxRolls")?.value||300);
+ const max=mode==="click"?Math.max(0,Number($("clickCount")?.value||0)):Math.max(1,Number($("maxRolls")?.value||300));
  let count=0;
  const tick=()=>{
   if(!running)return;
@@ -99,7 +99,7 @@ function runDemo(){
    $("resultCount").textContent="Lần bấm "+count;
    $("resultLines").innerHTML='<div class="result-line">Mô phỏng thao tác bấm tại vị trí đã chọn</div>';
    log('<p class="good">Lần bấm '+count+' · Chu kỳ '+($("clickMs")?.value||200)+' ms</p>');
-   if(count>=max){running=false;$("status").textContent="Đã hoàn tất mô phỏng";$("start").classList.remove("running");render();return;}
+   if(max>0&&count>=max){running=false;$("status").textContent="Đã hoàn tất mô phỏng";$("start").classList.remove("running");render();return;}
    setTimeout(tick,Math.max(100,Number($("clickMs")?.value||200)));return;
   }
   const lines=fakeLines();const enabled=stats[mode].filter(s=>s[1]);
