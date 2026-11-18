@@ -1,9 +1,9 @@
 {
   "app": "Auto_GDGC",
-  "latestVersion": "4.2.3",
-  "versionCode": 8,
-  "releaseNotes": "Smart Update and 2x faster roll timing",
+  "latestVersion": "4.2.4",
+  "versionCode": 9,
+  "releaseNotes": "Floating logo shows system time, date, Start time and elapsed roll timer",
   "apkUrl": "https://github.com/nhatlong2595-max/Auto_GDGC_Updates/releases/latest/download/Auto_GDGC.apk",
-  "sha256": "0c4eb42a7849d44cbda809f6f3033f5945bafbdee5566ab33e93ec87f7a0c7e7",
+  "sha256": "44159f8ca8cbc56fa8234b43e66b56a9a564a40d7e3b501f9565b069b491897e",
   "forceFullApk": true
 }
