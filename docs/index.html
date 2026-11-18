@@ -65,7 +65,8 @@ const defaults={
  gd:[["Tăng sát thương lên quái",true,12,1],["Tăng sát thương hoàn hảo",false,30,1],["Tăng MP tối đa",false,400,10],["Tăng Năng Lượng",false,30,1],["Tự động phục hồi AG mỗi giây",false,1,1]],
  gc:[["Sát thương vật lý",true,2.5,.1],["Sát thương phép",true,2.5,.1],["Sát thương 3 hệ",true,2.5,.1],["Sát thương curse",false,2.5,.1]]
 };
-let mode="gd",running=false,rolls=0,stats=JSON.parse(JSON.stringify(defaults));\nlet runStartedAt=0,runClockTimer=null;
+let mode="gd",running=false,rolls=0,stats=JSON.parse(JSON.stringify(defaults));
+let runStartedAt=0,runClockTimer=null;
 const $=id=>document.getElementById(id);
 function render(){
  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===mode));
