@@ -1,9 +1,9 @@
 {
   "app": "Auto_GDGC",
-  "latestVersion": "4.2.4",
-  "versionCode": 9,
-  "releaseNotes": "Floating logo shows system time, date, Start time and elapsed roll timer",
+  "latestVersion": "4.2.5",
+  "versionCode": 10,
+  "releaseNotes": "Floating overlay layout improved; independent clock and roll visibility controls",
   "apkUrl": "https://github.com/nhatlong2595-max/Auto_GDGC_Updates/releases/latest/download/Auto_GDGC.apk",
-  "sha256": "44159f8ca8cbc56fa8234b43e66b56a9a564a40d7e3b501f9565b069b491897e",
+  "sha256": "e264a01362b4181407244f59149f3635255416f534ca8bc51321258f81c2704a",
   "forceFullApk": true
 }
