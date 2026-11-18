@@ -6,15 +6,15 @@ on:
       version:
         description: "Release version, for example 4.2.0"
         required: true
-        default: "4.2.4"
+        default: "4.2.5"
       version_code:
         description: "Android versionCode; must be greater than the installed app"
         required: true
-        default: "9"
+        default: "10"
       release_notes:
         description: "Short release notes"
         required: true
-        default: "Floating logo shows system time, date, Start time and elapsed roll timer"
+        default: "Floating overlay layout improved; independent clock and roll visibility controls"
 
 permissions:
   contents: write
