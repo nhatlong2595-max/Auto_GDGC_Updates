@@ -21,6 +21,10 @@ on:
         required: true
         default: "Replace floating logo with beer mug icon"
 
+concurrency:
+  group: auto-gdgc-release
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
