@@ -128,9 +128,9 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ inputs.version }}
+          VERSION: ${{ inputs.version || '4.2.6' }}
           VERSION_CODE: ${{ inputs.version_code || '11' }}
-          NOTES: ${{ inputs.release_notes }}
+          NOTES: ${{ inputs.release_notes || 'Replace floating logo with beer mug icon' }}
           REPOSITORY: ${{ github.repository }}
         run: |
           APK_URL="https://github.com/$REPOSITORY/releases/latest/download/Auto_GDGC.apk"
