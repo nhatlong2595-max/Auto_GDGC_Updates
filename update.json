@@ -1,8 +1,8 @@
 {
   "app": "Auto_GDGC",
-  "latestVersion": "",
+  "latestVersion": "4.2.6",
   "versionCode": 11,
-  "releaseNotes": "",
+  "releaseNotes": "Replace floating logo with beer mug icon",
   "apkUrl": "https://github.com/nhatlong2595-max/Auto_GDGC_Updates/releases/latest/download/Auto_GDGC.apk",
   "sha256": "bc2a3b32b113b80bd968326ad55514abcab43c5aac26bf1e6acbb896b90e9c6e",
   "forceFullApk": true
