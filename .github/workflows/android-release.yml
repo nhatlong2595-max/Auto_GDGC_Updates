@@ -96,8 +96,8 @@ jobs:
       - name: Set version and build APK
         shell: bash
         env:
-          APP_VERSION: ${{ inputs.version }}
-          APP_VERSION_CODE: ${{ inputs.version_code }}
+          APP_VERSION: ${{ inputs.version || '4.2.6' }}
+          APP_VERSION_CODE: ${{ inputs.version_code || '11' }}
         run: |
           python3 - <<'PY'
           import os, re
@@ -119,8 +119,8 @@ jobs:
       - name: Publish full APK release
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ inputs.version }}
-          NOTES: ${{ inputs.release_notes }}
+          VERSION: ${{ inputs.version || '4.2.6' }}
+          NOTES: ${{ inputs.release_notes || 'Replace floating logo with beer mug icon' }}
         run: |
           gh release create "v$VERSION" Auto_GDGC.apk Auto_GDGC.apk.sha256 --title "Auto_GDGC v$VERSION" --notes "$NOTES" --latest
 
@@ -129,7 +129,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.version }}
-          VERSION_CODE: ${{ inputs.version_code }}
+          VERSION_CODE: ${{ inputs.version_code || '11' }}
           NOTES: ${{ inputs.release_notes }}
           REPOSITORY: ${{ github.repository }}
         run: |
