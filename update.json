@@ -1,9 +1,9 @@
 {
   "app": "Auto_GDGC",
-  "latestVersion": "4.2.5",
-  "versionCode": 10,
-  "releaseNotes": "Floating overlay layout improved; independent clock and roll visibility controls",
+  "latestVersion": "",
+  "versionCode": 11,
+  "releaseNotes": "",
   "apkUrl": "https://github.com/nhatlong2595-max/Auto_GDGC_Updates/releases/latest/download/Auto_GDGC.apk",
-  "sha256": "e264a01362b4181407244f59149f3635255416f534ca8bc51321258f81c2704a",
+  "sha256": "bc2a3b32b113b80bd968326ad55514abcab43c5aac26bf1e6acbb896b90e9c6e",
   "forceFullApk": true
 }
